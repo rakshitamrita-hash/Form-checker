@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0c">
+<title>Form Check</title>
+<style>
+:root{--bg:#0a0a0c;--bg-elev:#141417;--card:#1b1b20;--card2:#202026;--gold:#d4af37;--gold-soft:#e8c766;--text:#f2f0ec;--muted:#8d8a82;--red:#ff5c5c;--green:#43d17a;--border:rgba(212,175,55,0.18);}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+html,body{height:100%;margin:0;overscroll-behavior:none;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+.screen{display:none;flex-direction:column;flex:1;padding:20px 18px 28px;animation:fade .2s ease;}
+.screen.visible{display:flex;}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-0.01em;}
+.eyebrow{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
+.muted{color:var(--muted);font-size:14px;line-height:1.5;}
+.btn{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px 18px;font-size:16px;font-weight:700;text-align:center;cursor:pointer;transition:transform .08s,background .15s;}
+.btn:active{transform:scale(.97);background:var(--card2);}
+.btn-gold{background:var(--gold);color:#1a1408;border:none;}
+.btn-gold:active{background:var(--gold-soft);}
+.pill-row{display:flex;gap:6px;flex-wrap:wrap;}
+.pill{flex:1;min-width:34px;text-align:center;padding:11px 0;border-radius:10px;background:var(--card);border:1px solid var(--border);font-weight:700;cursor:pointer;font-size:14px;}
+.pill.active{background:var(--gold);color:#1a1408;border-color:var(--gold);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:12px;}
+.field-label{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:14px;margin-bottom:6px;}
+.tip-box{background:rgba(212,175,55,0.08);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--gold-soft);margin-top:12px;line-height:1.5;}
+.toggle2{display:flex;gap:8px;margin-top:8px;}
+.toggle2 .pill{flex:1;}
+.hidden{display:none!important;}
+.statline{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:4px;}
+.statline b{color:var(--text);}
+
+/* Camera screen */
+#screenActive{padding:14px;gap:10px;}
+.cam-wrap{position:relative;flex:1;border-radius:18px;overflow:hidden;background:#000;border:1px solid var(--border);}
+#video,#overlay{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;}
+#video{z-index:1;transform:scaleX(-1);}
+#overlay{z-index:2;pointer-events:none;transform:scaleX(-1);}
+.hud-top{position:absolute;top:10px;left:10px;right:10px;z-index:3;display:flex;justify-content:space-between;align-items:flex-start;}
+.hud-badge{background:rgba(10,10,12,0.8);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:12px;padding:8px 12px;}
+.hud-badge .ex-name{font-size:13px;font-weight:700;color:var(--gold-soft);}
+.hud-badge .set-of{font-size:11px;color:var(--muted);}
+.mute-btn{background:rgba(10,10,12,0.8);border:1px solid var(--border);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;}
+.hud-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;text-align:center;pointer-events:none;}
+.big-num{font-size:88px;font-weight:800;color:var(--gold);text-shadow:0 2px 24px rgba(0,0,0,.7);font-variant-numeric:tabular-nums;line-height:1;}
+.big-label{font-size:12px;color:#fff;opacity:.8;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+.hud-cue{position:absolute;bottom:14px;left:14px;right:14px;z-index:4;text-align:center;font-size:15px;font-weight:800;text-shadow:0 1px 8px rgba(0,0,0,.9);padding:6px 10px;border-radius:8px;min-height:32px;white-space:pre-line;}
+.hud-cue.issue{font-size:12.5px;font-weight:700;line-height:1.5;background:rgba(0,0,0,.55);border-radius:10px;padding:8px 12px;}
+.hud-cue.bad{color:var(--red);}
+.hud-cue.good{color:var(--green);}
+.hud-cue.warn{color:#ffb347;}
+.vis-warn{position:absolute;top:58px;left:0;right:0;z-index:4;text-align:center;font-size:13px;font-weight:700;color:#ffb347;background:rgba(0,0,0,.65);padding:6px;display:none;}
+.active-controls{display:flex;gap:10px;padding-top:2px;}
+
+/* Superman UI */
+.superman-wrap{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:56px;gap:10px;}
+.superman-wrap.visible{display:flex;}
+.sup-count{font-size:42px;font-weight:800;color:var(--gold);text-shadow:0 2px 12px rgba(0,0,0,.8);font-variant-numeric:tabular-nums;}
+.sup-sub{font-size:13px;color:rgba(255,255,255,.7);text-align:center;padding:0 24px;}
+.sup-timer{font-size:22px;font-weight:700;color:#fff;min-height:28px;text-align:center;font-variant-numeric:tabular-nums;}
+.sup-btn{border:none;border-radius:18px;padding:18px 44px;font-size:19px;font-weight:800;cursor:pointer;transition:background .15s,box-shadow .15s;}
+.sup-btn.idle{background:var(--gold);color:#1a1408;box-shadow:0 4px 20px rgba(212,175,55,.4);}
+.sup-btn.active{background:var(--green);color:#0a1a0c;box-shadow:0 4px 20px rgba(67,209,122,.4);}
+
+/* Ready overlay */
+.ready-overlay{position:absolute;inset:0;z-index:6;background:rgba(10,10,12,.87);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px;text-align:center;border-radius:18px;}
+.ready-overlay h3{font-size:21px;color:var(--gold-soft);margin:0;}
+.ready-overlay p{font-size:14px;color:var(--muted);margin:0;line-height:1.5;}
+.ready-btn{background:var(--gold);color:#1a1408;border:none;border-radius:14px;padding:18px 36px;font-size:17px;font-weight:800;cursor:pointer;}
+.ready-btn:disabled{opacity:.35;cursor:not-allowed;}
+.esc-overlay{position:absolute;inset:0;z-index:9;background:rgba(20,4,4,.93);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;border-radius:18px;}
+.esc-overlay h3{font-size:19px;color:var(--red);margin:0;}
+.esc-overlay p{font-size:14px;color:var(--text);margin:0;line-height:1.6;}
+.esc-btn{background:var(--gold);color:#1a1408;border:none;border-radius:14px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;}
+.track-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;}
+.track-card .ex-label{font-size:13px;font-weight:800;color:var(--gold-soft);margin-bottom:8px;letter-spacing:.04em;}
+.track-line{font-size:13px;line-height:1.5;display:flex;gap:8px;margin-bottom:4px;}
+.track-line.strong{color:var(--green);}
+.track-line.issue{color:#ffb347;}
+.track-rec{font-size:12.5px;color:var(--gold-soft);margin-top:8px;line-height:1.5;}
+
+/* Rest screen */
+.rest-timer{font-size:44px;font-weight:800;color:var(--gold-soft);text-align:center;font-variant-numeric:tabular-nums;margin:12px 0 2px;}
+.rest-sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:12px;}
+
+/* Summary screen */
+#screenSummary{padding:0;overflow-y:auto;}
+.summary-scroll{display:flex;flex-direction:column;gap:12px;padding:20px 18px 36px;}
+.coach-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;}
+.coach-card .ex-label{font-size:13px;font-weight:800;color:var(--gold-soft);margin-bottom:10px;letter-spacing:.04em;}
+.coach-line{font-size:13px;line-height:1.5;display:flex;gap:8px;margin-bottom:4px;}
+.coach-line .icon{flex-shrink:0;}
+.coach-line.win{color:var(--green);}
+.coach-line.issue{color:var(--red);}
+.coach-line.focus{color:var(--gold-soft);}
+.notion-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;font-size:12px;white-space:pre-wrap;line-height:1.65;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.visible{display:flex;}
+.modal-sheet{background:var(--bg-elev);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:22px 18px 32px;width:100%;max-width:520px;}
+</style>
+</head>
+<body>
+
+<!-- SORENESS MODAL -->
+<div class="modal-overlay" id="sorenessModal">
+  <div class="modal-sheet">
+    <div class="eyebrow">Next-day check-in</div>
+    <h2 style="font-size:19px;">How sore are you today?</h2>
+    <p class="muted" id="sorenessSub" style="margin-top:4px;"></p>
+    <div class="pill-row" style="margin-top:14px;" id="sorenessPills"></div>
+    <div class="btn" id="sorenessSkip" style="margin-top:12px;">Skip</div>
+  </div>
+</div>
+
+<!-- START -->
+<div class="screen visible" id="screenStart">
+  <div style="flex:.3;"></div>
+  <div class="eyebrow">Bodyweight Circuit</div>
+  <h1 style="font-size:30px;">Form Check</h1>
+  <p class="muted" style="margin-top:6px;">Camera-tracked. Voice-coached. Auto rep counting.</p>
+  <div class="card">
+    <div class="statline"><span>Days since last circuit</span><b id="statDays">—</b></div>
+    <div class="statline" style="margin-top:8px;"><span>Sessions logged</span><b id="statCount">0</b></div>
+  </div>
+  <div class="field-label">Energy level going in</div>
+  <div class="pill-row" id="energyPills"></div>
+  <div style="flex:1;"></div>
+  <div class="btn btn-gold" id="startSessionBtn" style="font-size:18px;opacity:.45;">Start Session</div>
+  <p class="muted" style="text-align:center;margin-top:10px;font-size:13px;">Allow camera + sound when prompted.</p>
+</div>
+
+<!-- INTRO -->
+<div class="screen" id="screenIntro">
+  <div class="eyebrow" id="introEyebrow">Exercise 1 of 5</div>
+  <h1 id="introTitle" style="font-size:28px;"></h1>
+  <p class="muted" id="introTarget" style="margin-top:4px;"></p>
+  <div id="introVersionWrap" class="hidden">
+    <div class="field-label" id="introVersionLabel">Version</div>
+    <div class="toggle2" id="introVersionPills"></div>
+  </div>
+  <div class="tip-box" id="introTip"></div>
+  <div class="tip-box" id="introNote" style="display:none;"></div>
+  <div style="flex:1;"></div>
+  <div class="btn btn-gold" id="beginExerciseBtn" style="font-size:17px;">Open Camera →</div>
+</div>
+
+<!-- CALIBRATION (first session only) -->
+<div class="screen" id="screenCalibrate">
+  <div class="eyebrow">One-time setup</div>
+  <h1 style="font-size:26px;">Quick calibration</h1>
+  <p class="muted" id="calibIntro" style="margin-top:6px;"></p>
+  <div class="tip-box">Do 2–3 natural reps at your normal depth while we learn your body's proportions and range of motion. This prevents false "bad form" flags — everyone's joint angles look a little different.</div>
+  <div style="flex:1;"></div>
+  <div class="btn btn-gold" id="beginCalibBtn" style="font-size:17px;">Open Camera — Begin Calibration →</div>
+</div>
+
+<!-- ACTIVE -->
+<div class="screen" id="screenActive">
+  <div class="cam-wrap" id="camWrap">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="vis-warn" id="visWarn">⚠️ Can't see you — step back or fix lighting</div>
+    <div class="ready-overlay" id="readyOverlay">
+      <h3 id="readyTitle">Get into position</h3>
+      <p id="readyTip"></p>
+      <button class="ready-btn" id="readyBtn" disabled>I'm Ready — Start</button>
+    </div>
+    <div class="esc-overlay" id="escOverlay">
+      <h3>Let's fix your setup first</h3>
+      <p>Tracking on your <b id="escJoint">—</b> has failed repeatedly this set — this isn't going to give accurate readings right now.</p>
+      <p id="escFix" style="color:var(--gold-soft);font-weight:700;"></p>
+      <button class="esc-btn" id="escContinueBtn">I've Fixed It — Continue</button>
+    </div>
+    <div class="superman-wrap" id="supWrap">
+      <div class="sup-count" id="supCount">0 / 8</div>
+      <div class="sup-sub">Tap Start Rep, lift and hold, tap End Rep when you come down.</div>
+      <div class="sup-timer" id="supTimer"> </div>
+      <button class="sup-btn idle" id="supBtn">Start Rep</button>
+    </div>
+    <div class="hud-top">
+      <div class="hud-badge"><div class="ex-name" id="hudExName"></div><div class="set-of" id="hudSetOf"></div></div>
+      <div class="mute-btn" id="muteBtn">🔊</div>
+    </div>
+    <div class="hud-center"><div class="big-num" id="bigNum">0</div><div class="big-label" id="bigLabel">Reps</div></div>
+    <div class="hud-cue" id="hudCue"></div>
+  </div>
+  <div class="active-controls">
+    <div class="btn" id="flipCamBtn" style="flex:0 0 56px;">↺</div>
+    <div class="btn btn-gold" id="endSetBtn" style="flex:1;">End Set</div>
+  </div>
+</div>
+
+<!-- REST -->
+<div class="screen" id="screenRest">
+  <div class="eyebrow">Set Complete</div>
+  <h2 id="restTitle" style="font-size:22px;"></h2>
+  <p class="muted" id="restRecap" style="margin-top:4px;"></p>
+
+  <div id="rpeWrap" class="hidden">
+    <div class="field-label">RPE — How hard was that? (1–10)</div>
+    <div class="pill-row" id="rpePills"></div>
+  </div>
+  <div id="couldMoreWrap" class="hidden">
+    <div class="field-label">Could you have done 2+ more reps?</div>
+    <div class="toggle2">
+      <div class="pill" id="couldYes">Yes</div>
+      <div class="pill" id="couldNo">No</div>
+    </div>
+  </div>
+  <div id="kneePainWrap" class="hidden">
+    <div class="field-label">Any knee pain or discomfort?</div>
+    <div class="toggle2">
+      <div class="pill active" id="kneePainNo">No</div>
+      <div class="pill" id="kneePainYes">Yes</div>
+    </div>
+  </div>
+
+  <div style="flex:1;"></div>
+  <div class="rest-timer" id="restTimer">0:00</div>
+  <div class="rest-sub" id="restTarget"></div>
+  <div class="btn btn-gold" id="nextSetBtn" style="font-size:17px;">Start Next Set →</div>
+</div>
+
+<!-- SUMMARY -->
+<div class="screen" id="screenSummary">
+  <div class="summary-scroll" id="summaryScroll">
+    <div>
+      <div class="eyebrow">Session Complete</div>
+      <h1 style="font-size:26px;">Done.</h1>
+      <p class="muted" id="summaryHeadline" style="margin-top:4px;"></p>
+    </div>
+    <div class="eyebrow" style="margin-bottom:0;">Coaching Report</div>
+    <div id="coachingCards"></div>
+    <div class="eyebrow" style="margin-bottom:0;">Tracking Quality Report</div>
+    <div id="trackingCards"></div>
+    <div class="eyebrow" style="margin-bottom:0;">Fitness Tracker</div>
+    <div class="notion-box" id="notionBox"></div>
+    <div class="btn btn-gold" id="copyBtn">Copy for Notion</div>
+    <div class="btn" id="doneBtn">Done</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ─── VERSION GATE — clears old test data ─── */
+const APP_VER='5';
+if(localStorage.getItem('fc_ver')!==APP_VER){localStorage.removeItem('fc_sessions');localStorage.setItem('fc_ver',APP_VER);}
+
+/* ─── CONFIG ─── */
+const CFG={
+  MIN_VIS:0.30, CUE_COOLDOWN:2500, MIN_REP_MS:700, GOOD_FORM_FRAMES:150,
+  VIS_KEY_COUNT:3,
+  pushup:{topAngle:155,descendStart:140,fullDepth:100,partialDepth:125,sagThresh:0.033,pf:4},
+  squat:{topAngle:162,descendStart:148,parallelDepth:108,pf:3},
+  glute:{bottomAngle:130,riseStart:162,fullExtAngle:165,pf:6},
+  plank:{sagThresh:0.032},
+  superman:{holdNeeded:2.0}
+};
+const LM={L_SH:11,R_SH:12,L_EL:13,R_EL:14,L_WR:15,R_WR:16,L_HIP:23,R_HIP:24,L_KN:25,R_KN:26,L_AN:27,R_AN:28};
+const KEY_LM=[11,12,23,24,25,26];
+const JOINT_NAMES={11:'left shoulder',12:'right shoulder',13:'left elbow',14:'right elbow',15:'left wrist',16:'right wrist',23:'left hip',24:'right hip',25:'left knee',26:'right knee',27:'left ankle',28:'right ankle'};
+/* Landmark PAIRS required in-frame before a set can start, per exercise.
+   Only ONE side of each pair needs to be visible — side-on camera angle
+   (as instructed for push-ups/squats) naturally hides the far side. */
+const FULL_BODY_LM={
+  pushups:[[11,12],[13,14],[15,16],[23,24],[27,28]],
+  squats:[[11,12],[23,24],[25,26],[27,28]],
+  glutebridges:[[11,12],[23,24],[25,26]],
+  plank:[[11,12],[23,24],[27,28]],
+  superman:[[11,12],[23,24],[25,26]]
+};
+const CONF_HIGH=0.75, CONF_MED=0.50;
+function confidenceLabel(avgVis){return avgVis>=CONF_HIGH?'High':avgVis>=CONF_MED?'Medium':'Low';}
+
+const EXERCISES=[
+  {id:'pushups',label:'Push-Ups',type:'reps',sets:3,repTarget:'8',restSec:60,
+   hasVersion:true,versionLabel:'Version',versions:[{v:'full',l:'Full'},{v:'knee',l:'Knee'}],
+   hasRPE:true,hasCouldMore:true,
+   readyTip:'Side-on to camera, waist height. Full body in frame — head to ankles.',
+   tip:'📷 Side-on, waist height. Head to ankles in frame.',
+   note:'💡 Try 1 full rep first. Clean? Stay full. Otherwise switch to knee version.'},
+  {id:'squats',label:'Bodyweight Squats',type:'reps',sets:3,repTarget:'12',restSec:60,
+   hasKneePain:true,hasRPE:true,
+   readyTip:'Side-on to camera, hip height. Full body head to feet in frame.',
+   tip:'📷 Side-on, hip height. Full body head to feet in frame.'},
+  {id:'glutebridges',label:'Glute Bridges',type:'reps',sets:3,repTarget:'10',restSec:45,
+   hasRPE:true,
+   readyTip:'Lie on your back. Phone at floor level to your side. Shoulder, hip, knee all in frame.',
+   tip:'📷 Floor level, side-on. Shoulder to knee in frame.'},
+  {id:'plank',label:'Forearm Plank',type:'hold',sets:3,repTarget:'30s',restSec:45,
+   hasVersion:true,versionLabel:'Version',versions:[{v:'full',l:'Full'},{v:'knees',l:'Knees Down'}],
+   readyTip:'Side-on, floor level. Get into position FIRST, then tap Start Hold.',
+   tip:'📷 Side-on, floor level. Full body in frame. Get into position before tapping.'},
+  {id:'superman',label:'Superman Holds',type:'superman',sets:2,repTarget:'8',restSec:45,
+   hasVersion:true,versionLabel:'Lift',versions:[{v:'arms',l:'Arms Only'},{v:'arms_legs',l:'Arms + Legs'}],
+   readyTip:'Lie face down. Phone at floor level side-on. Tap Start Rep when you lift, End Rep when you lower.',
+   tip:'📷 Floor level, side-on. Use the tap buttons — hands free during the hold.'}
+];
+
+/* ─── STATE ─── */
+let poseModel=null,video=null,overlay=null,octx=null;
+let stream=null,facingMode='environment';
+let processingActive=false,busy=false,countingActive=false;
+let voiceMuted=(localStorage.getItem('fc_muted')==='1');
+let app={exIdx:0,setIdx:0,energy:null,version:{}};
+let S=null,session=null,pendingRecord=null;
+let plankInterval=null,restInterval=null,supInterval=null,supRepActive=false,supRepStart=0;
+let awaitingReady=false,lastLM=null,litCanvas=null,litCtx=null,lastBrightness=1,gateFrameCount=0;
+let calibMode=false,calibReps=[];
+
+function newS(){
+  return{repsData:[],phase:'idle',dF:0,aF:0,bF:0,tF:0,minAngle:999,maxAngle:-999,
+    timerSeconds:0,holdBtnActive:false,formBreakDetected:false,formBreakTime:null,
+    lockedSide:null,lastCueTime:{},lastRepTime:0,goodFF:0,saidGood:false,
+    jointFails:{},confSamples:[],paused:false};
+}
+
+/* ─── STORAGE ─── */
+function loadSessions(){try{return JSON.parse(localStorage.getItem('fc_sessions')||'[]');}catch(e){return[];}}
+function saveSessions(l){localStorage.setItem('fc_sessions',JSON.stringify(l));}
+function daysSince(ds){const d=new Date(ds+'T00:00:00'),n=new Date();n.setHours(0,0,0,0);return Math.round((n-d)/86400000);}
+
+/* ─── SCREENS ─── */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));document.getElementById(id).classList.add('visible');}
+
+/* ─── VOICE ─── */
+function unlockVoice(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}
+function speak(t){if(voiceMuted)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.05;speechSynthesis.speak(u);}catch(e){}}
+function cue(key,text,cls){
+  if(!countingActive)return;
+  const now=Date.now();
+  if(!S.lastCueTime[key]||now-S.lastCueTime[key]>=CFG.CUE_COOLDOWN){
+    S.lastCueTime[key]=now;speak(text);hudCue(text,cls||'bad');
+    S.goodFF=0;
+  }
+}
+function hudCue(text,cls){
+  const el=document.getElementById('hudCue');el.textContent=text;el.className='hud-cue '+(cls||'bad');
+  clearTimeout(hudCue._t);hudCue._t=setTimeout(()=>{el.textContent='';el.className='hud-cue';},2200);
+}
+
+/* ─── SPECIFIC JOINT FAILURE MESSAGING ─── */
+function describeJointIssue(idx,lm){
+  const name=JOINT_NAMES[idx]||'that body part';
+  const p=lm&&lm[idx];
+  if(!p||typeof p.visibility!=='number'){
+    return{what:`Can't see your ${name}`,why:"it isn't detected in the current frame.",fix:'Step back until your whole body is visible to the camera.'};
+  }
+  const outOfFrame=p.x<0.02||p.x>0.98||p.y<0.02||p.y>0.98;
+  if(outOfFrame){
+    return{what:`Can't see your ${name} — you're too close to the camera`,why:'that joint is outside the frame edge.',fix:'Step back about 1 metre, or move the camera so your whole body fits in frame.'};
+  }
+  if(lastBrightness<0.18){
+    return{what:`Tracking lost for your ${name}`,why:'the room is too dark for reliable tracking.',fix:'Turn on a light or move closer to a window.'};
+  }
+  return{what:`Tracking lost for your ${name}`,why:'confidence is too low — likely loose clothing or the joint being blocked from this angle.',fix:'Try a fitted shirt, or turn slightly so that joint is clearly visible to the camera.'};
+}
+function resetJointFails(indices){if(!S)return;indices.forEach(i=>{S.jointFails[i]=0;});}
+function reportJointIssue(idx,lm,exId){
+  if(!S||!session)return;
+  if(!session.trackingLog[exId])session.trackingLog[exId]={};
+  if(!session.trackingLog[exId][idx])session.trackingLog[exId][idx]={count:0,name:JOINT_NAMES[idx]};
+  session.trackingLog[exId][idx].count++;
+  S.jointFails[idx]=(S.jointFails[idx]||0)+1;
+  const{what,why,fix}=describeJointIssue(idx,lm);
+  if(S.jointFails[idx]>=3){escalateStop(idx,fix);return;}
+  const now=Date.now();const key='issue_'+idx;
+  if(!S.lastCueTime[key]||now-S.lastCueTime[key]>=CFG.CUE_COOLDOWN){
+    S.lastCueTime[key]=now;
+    speak(what);
+    const el=document.getElementById('hudCue');
+    el.textContent=`WHAT'S WRONG: ${what}\nWHY: ${why[0].toUpperCase()+why.slice(1)}\nFIX: ${fix}`;
+    el.className='hud-cue issue warn';
+    clearTimeout(hudCue._t);hudCue._t=setTimeout(()=>{el.textContent='';el.className='hud-cue';},3200);
+    S.goodFF=0;
+  }
+}
+function escalateStop(idx,fixText){
+  countingActive=false;if(S)S.paused=true;
+  const ex=EXERCISES[app.exIdx];
+  if(ex&&ex.type==='hold'&&plankInterval){clearInterval(plankInterval);plankInterval=null;}
+  document.getElementById('escJoint').textContent=JOINT_NAMES[idx]||'that joint';
+  document.getElementById('escFix').textContent='FIX: '+fixText;
+  document.getElementById('escOverlay').style.display='flex';
+  speak(`This isn't going to give accurate readings right now. ${fixText}`);
+}
+document.getElementById('escContinueBtn').onclick=()=>{
+  document.getElementById('escOverlay').style.display='none';
+  if(S){S.jointFails={};S.paused=false;}
+  const ex=EXERCISES[app.exIdx];
+  if(ex&&ex.type==='hold'&&document.getElementById('endSetBtn').dataset.hs==='running'&&!plankInterval){
+    plankInterval=setInterval(()=>{S.timerSeconds++;document.getElementById('bigNum').textContent=S.timerSeconds;},1000);
+  }
+  countingActive=true;
+};
+function firstFailingIdx(lm,pairs){
+  for(const[li,ri]of pairs){
+    const idx=S.lockedSide==='left'?li:ri;
+    const p=lm[idx];
+    if(!p||typeof p.visibility!=='number'||p.visibility<CFG.MIN_VIS)return idx;
+  }
+  return null;
+}
+
+/* ─── LIGHTING SAMPLING ─── */
+function sampleBrightness(){
+  if(!litCtx||!video||video.readyState<2)return lastBrightness;
+  try{
+    litCtx.drawImage(video,0,0,16,12);
+    const d=litCtx.getImageData(0,0,16,12).data;
+    let sum=0,n=d.length/4;
+    for(let i=0;i<d.length;i+=4){sum+=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];}
+    return(sum/n)/255;
+  }catch(e){return lastBrightness;}
+}
+
+/* ─── PRE-START GATE: full body in frame + lighting ─── */
+function updateReadyGate(lm){
+  const ex=EXERCISES[app.exIdx];
+  const pairs=FULL_BODY_LM[ex.id]||[[11,12],[23,24],[25,26]];
+  const missing=[];
+  pairs.forEach(([li,ri])=>{
+    const idx=S.lockedSide==='left'?li:ri;
+    const p=lm[idx];
+    if(!p||typeof p.visibility!=='number'||p.visibility<CFG.MIN_VIS)missing.push(idx);
+  });
+  gateFrameCount++;
+  if(gateFrameCount%8===0)lastBrightness=sampleBrightness();
+  const btn=document.getElementById('readyBtn'),tip=document.getElementById('readyTip');
+  if(missing.length){
+    btn.disabled=true;
+    const names=missing.slice(0,3).map(i=>JOINT_NAMES[i]).join(', ');
+    tip.textContent=`Can't see your ${names} yet — step back until your whole body is in frame.`;
+  }else if(lastBrightness<0.18){
+    btn.disabled=true;
+    tip.textContent='Lighting looks too dark for reliable tracking — turn on a light or move toward a window.';
+  }else{
+    btn.disabled=false;
+    tip.textContent=ex.readyTip+' ✓ Full body in frame, lighting looks good.';
+  }
+}
+function goodFormTick(){
+  if(!countingActive)return;
+  S.goodFF++;
+  if(S.goodFF>=CFG.GOOD_FORM_FRAMES&&!S.saidGood){S.saidGood=true;speak('Form looks good. Keep it up.');hudCue('Form looks good ✓','good');}
+}
+
+/* ─── MATH ─── */
+function ang(a,b,c){
+  const ab={x:a.x-b.x,y:a.y-b.y},cb={x:c.x-b.x,y:c.y-b.y};
+  const d=ab.x*cb.x+ab.y*cb.y,m=Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y)||1e-6;
+  return Math.acos(Math.min(1,Math.max(-1,d/m)))*180/Math.PI;
+}
+function devNorm(a,mid,c){
+  const dx=c.x-a.x,dy=c.y-a.y,len=Math.hypot(dx,dy)||1e-6;
+  const t=((mid.x-a.x)*dx+(mid.y-a.y)*dy)/(len*len);
+  return(mid.y-(a.y+t*dy))/len;
+}
+function vis(...pts){return pts.every(p=>p&&typeof p.visibility==='number'&&p.visibility>=CFG.MIN_VIS);}
+function pickSide(lm){
+  const l=(lm[11]?.visibility||0)+(lm[23]?.visibility||0)+(lm[25]?.visibility||0);
+  const r=(lm[12]?.visibility||0)+(lm[24]?.visibility||0)+(lm[26]?.visibility||0);
+  return r>=l?'right':'left';
+}
+function pt(lm,li,ri){return S.lockedSide==='left'?lm[li]:lm[ri];}
+function countRep(data){
+  const now=Date.now();if(now-S.lastRepTime<CFG.MIN_REP_MS)return;S.lastRepTime=now;
+  const avgVis=S.confSamples.length?S.confSamples.reduce((a,b)=>a+b,0)/S.confSamples.length:1;
+  data.confidence=confidenceLabel(avgVis);
+  S.confSamples=[];
+  if(calibMode){
+    calibReps.push(data);
+    document.getElementById('bigNum').textContent=calibReps.length;
+    speak(String(calibReps.length));
+    if(calibReps.length>=3)finishCalibration();
+    return;
+  }
+  S.repsData.push(data);const count=S.repsData.length;
+  speak(String(count));document.getElementById('bigNum').textContent=count;
+  const ex=EXERCISES[app.exIdx];const target=parseInt(ex.repTarget.match(/\d+/g)?.pop()||'999');
+  if(count>=target){setTimeout(()=>{countingActive=false;processingActive=false;speak(`${count} reps. Set complete.`);finishSet();},400);}
+}
+
+/* ─── CALIBRATION ─── */
+function needsCalibration(ex){return['pushups','squats','glutebridges'].includes(ex.id)&&!localStorage.getItem('fc_calib_'+ex.id);}
+function finishCalibration(){
+  countingActive=false;processingActive=false;
+  const ex=EXERCISES[app.exIdx];
+  let calib={};
+  if(ex.id==='pushups'||ex.id==='squats'){
+    const mins=calibReps.map(r=>r.minAngle).filter(v=>typeof v==='number');
+    if(mins.length)calib={fullDepthAngle:Math.round(Math.min(...mins)+8)};
+  }else if(ex.id==='glutebridges'){
+    const maxs=calibReps.map(r=>r.maxAngle).filter(v=>typeof v==='number');
+    if(maxs.length)calib={fullExtAngle:Math.round(Math.max(...maxs)-6)};
+  }
+  localStorage.setItem('fc_calib_'+ex.id,JSON.stringify(calib));
+  calibMode=false;calibReps=[];
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  speak('Calibration complete.');
+  showExerciseIntro();
+}
+document.getElementById('beginCalibBtn').onclick=async()=>{
+  const ex=EXERCISES[app.exIdx];
+  showScreen('screenActive');await startCamera();
+  S=newS();S.calibOverride=null;
+  calibMode=true;calibReps=[];
+  countingActive=false;processingActive=true;
+  document.getElementById('hudExName').textContent=ex.label+' — Calibration';
+  document.getElementById('hudSetOf').textContent='2–3 natural reps';
+  document.getElementById('bigLabel').textContent='Reps';
+  document.getElementById('bigNum').textContent='0';
+  document.getElementById('supWrap').classList.remove('visible');
+  document.getElementById('readyTitle').textContent='Get into position';
+  document.getElementById('readyTip').textContent=ex.readyTip;
+  document.getElementById('readyOverlay').style.display='flex';
+  document.getElementById('readyBtn').disabled=true;
+  awaitingReady=true;
+  gateFrameCount=0;
+  document.getElementById('endSetBtn').textContent='Cancel';
+  speak('Calibration. Get into position, then tap Ready.');
+};
+
+/* ─── VISIBILITY ─── */
+function checkVis(lm){
+  const v=KEY_LM.filter(i=>lm[i]&&lm[i].visibility>=CFG.MIN_VIS).length;
+  document.getElementById('visWarn').style.display=v<CFG.VIS_KEY_COUNT?'block':'none';
+  if(v===0)cue('novis','I cannot see you. Step back and check your lighting.','warn');
+  else if(v<CFG.VIS_KEY_COUNT)cue('partvis','Step back — I can only see part of your body.','warn');
+}
+
+/* ─── SKELETON ─── */
+const PAIRS=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+function drawSkel(lm){
+  if(!octx)return;
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  const w=overlay.width,h=overlay.height;
+  octx.lineWidth=3.5;octx.strokeStyle='rgba(212,175,55,0.9)';
+  PAIRS.forEach(([ai,bi])=>{
+    const a=lm[ai],b=lm[bi];if(!a||!b||a.visibility<0.45||b.visibility<0.45)return;
+    octx.beginPath();octx.moveTo(a.x*w,a.y*h);octx.lineTo(b.x*w,b.y*h);octx.stroke();
+  });
+  octx.fillStyle='rgba(255,255,255,.92)';
+  [11,12,13,14,15,16,23,24,25,26,27,28].forEach(i=>{
+    const p=lm[i];if(!p||p.visibility<0.35)return;
+    octx.beginPath();octx.arc(p.x*w,p.y*h,5,0,Math.PI*2);octx.fill();
+  });
+}
+
+/* ─── ANALYZERS ─── */
+function analyzePushup(lm){
+  const failIdx=firstFailingIdx(lm,[[LM.L_SH,LM.R_SH],[LM.L_EL,LM.R_EL],[LM.L_WR,LM.R_WR],[LM.L_HIP,LM.R_HIP]]);
+  if(failIdx!==null){reportJointIssue(failIdx,lm,'pushups');return;}
+  const sh=pt(lm,LM.L_SH,LM.R_SH),el=pt(lm,LM.L_EL,LM.R_EL),wr=pt(lm,LM.L_WR,LM.R_WR),hip=pt(lm,LM.L_HIP,LM.R_HIP);
+  const isKnee=app.version.pushups==='knee';
+  const ref=isKnee?pt(lm,LM.L_KN,LM.R_KN):pt(lm,LM.L_AN,LM.R_AN);
+  resetJointFails([LM.L_SH,LM.R_SH,LM.L_EL,LM.R_EL,LM.L_WR,LM.R_WR,LM.L_HIP,LM.R_HIP]);
+  const elbA=ang(sh,el,wr);
+  if(vis(sh,hip,ref)){
+    const d=devNorm(sh,hip,ref);
+    if(d>CFG.pushup.sagThresh){cue('sag','Hips are dropping down. Push them up and squeeze your core.','bad');return;}
+    if(d<-CFG.pushup.sagThresh){cue('pike','Hips too high. Lower them until your body is flat.','bad');return;}
+  }
+  goodFormTick();
+  S.confSamples.push((sh.visibility+el.visibility+wr.visibility+hip.visibility)/4);
+  if(S.phase==='idle'||S.phase==='top'){
+    if(elbA<CFG.pushup.descendStart){S.dF++;}else S.dF=0;
+    if(S.dF>=CFG.pushup.pf){S.phase='descending';S.minAngle=elbA;S.dF=0;S.phaseFrames=0;}else S.phase='top';
+  } else if(S.phase==='descending'){
+    S.minAngle=Math.min(S.minAngle,elbA);S.phaseFrames=(S.phaseFrames||0)+1;
+    if(elbA>CFG.pushup.topAngle){S.aF++;}else S.aF=0;
+    if(S.aF>=CFG.pushup.pf){
+      const fullDepth=S.calibOverride?.fullDepthAngle??CFG.pushup.fullDepth;
+      const q=S.minAngle<=fullDepth?'full':(S.minAngle<=CFG.pushup.partialDepth?'partial':'shallow');
+      const jerky=S.phaseFrames<5;
+      if(q==='shallow')cue('depth','Go lower. Elbows need to bend further.','bad');
+      else if(jerky)cue('tempo','Slow down — that was too fast to control properly.','bad');
+      countRep({quality:q,minAngle:Math.round(S.minAngle),tempo:jerky?'fast':'controlled'});
+      S.phase='top';S.minAngle=999;S.aF=0;S.phaseFrames=0;
+    }
+  }
+}
+function analyzeSquat(lm){
+  const failIdx=firstFailingIdx(lm,[[LM.L_HIP,LM.R_HIP],[LM.L_KN,LM.R_KN],[LM.L_AN,LM.R_AN]]);
+  if(failIdx!==null){reportJointIssue(failIdx,lm,'squats');return;}
+  const hip=pt(lm,LM.L_HIP,LM.R_HIP),knee=pt(lm,LM.L_KN,LM.R_KN),ank=pt(lm,LM.L_AN,LM.R_AN),sh=pt(lm,LM.L_SH,LM.R_SH);
+  resetJointFails([LM.L_HIP,LM.R_HIP,LM.L_KN,LM.R_KN,LM.L_AN,LM.R_AN]);
+  const kA=ang(hip,knee,ank);
+  if(vis(sh,hip)&&S.phase==='descending'){
+    if(Math.abs(sh.x-hip.x)>0.12)cue('lean','Chest up. You are leaning too far forward.','bad');
+  }
+  if(S.phase==='idle'||S.phase==='top'){
+    goodFormTick();
+    S.confSamples.push((hip.visibility+knee.visibility+ank.visibility)/3);
+    if(kA<CFG.squat.descendStart){S.dF++;}else S.dF=0;
+    if(S.dF>=CFG.squat.pf){S.phase='descending';S.minAngle=kA;S.dF=0;S.phaseFrames=0;}else S.phase='top';
+  } else if(S.phase==='descending'){
+    S.minAngle=Math.min(S.minAngle,kA);S.phaseFrames=(S.phaseFrames||0)+1;
+    S.confSamples.push((hip.visibility+knee.visibility+ank.visibility)/3);
+    if(kA>CFG.squat.topAngle){S.aF++;}else S.aF=0;
+    if(S.aF>=CFG.squat.pf){
+      const parallelDepth=S.calibOverride?.fullDepthAngle??CFG.squat.parallelDepth;
+      const depth=S.minAngle<=parallelDepth?'parallel':'high';
+      const jerky=S.phaseFrames<5;
+      if(depth==='high')cue('depth','Go lower. Get your thighs parallel to the ground.','bad');
+      else if(jerky)cue('tempo','Slow down — that squat was too fast to control properly.','bad');
+      countRep({depth,minAngle:Math.round(S.minAngle),tempo:jerky?'fast':'controlled'});
+      S.phase='top';S.minAngle=999;S.aF=0;S.phaseFrames=0;
+    }
+  }
+}
+function analyzeGlute(lm){
+  const failIdx=firstFailingIdx(lm,[[LM.L_SH,LM.R_SH],[LM.L_HIP,LM.R_HIP],[LM.L_KN,LM.R_KN]]);
+  if(failIdx!==null){reportJointIssue(failIdx,lm,'glutebridges');return;}
+  const sh=pt(lm,LM.L_SH,LM.R_SH),hip=pt(lm,LM.L_HIP,LM.R_HIP),knee=pt(lm,LM.L_KN,LM.R_KN);
+  resetJointFails([LM.L_SH,LM.R_SH,LM.L_HIP,LM.R_HIP,LM.L_KN,LM.R_KN]);
+  const hA=ang(sh,hip,knee);
+  S.confSamples.push((sh.visibility+hip.visibility+knee.visibility)/3);
+  if(S.phase==='idle'||S.phase==='bottom'){
+    goodFormTick();
+    if(hA>CFG.glute.riseStart){S.tF++;}else S.tF=0;
+    if(S.tF>=CFG.glute.pf){S.phase='rising';S.maxAngle=hA;S.tF=0;}else S.phase='bottom';
+  } else if(S.phase==='rising'){
+    S.maxAngle=Math.max(S.maxAngle,hA);
+    if(hA<CFG.glute.bottomAngle){S.bF++;}else S.bF=0;
+    if(S.bF>=CFG.glute.pf){
+      const fullExt=S.calibOverride?.fullExtAngle??CFG.glute.fullExtAngle;
+      const height=S.maxAngle>=fullExt?'full':'partial';
+      if(height==='partial')cue('ext','Push your hips higher. Drive all the way up to full extension.','bad');
+      else goodFormTick();
+      countRep({height,maxAngle:Math.round(S.maxAngle)});
+      S.phase='bottom';S.maxAngle=-999;S.bF=0;
+    }
+  }
+}
+function analyzePlank(lm){
+  const isKnee=app.version.plank==='knees';
+  const refIdxPair=isKnee?[LM.L_KN,LM.R_KN]:[LM.L_AN,LM.R_AN];
+  const failIdx=firstFailingIdx(lm,[[LM.L_SH,LM.R_SH],[LM.L_HIP,LM.R_HIP],refIdxPair]);
+  if(failIdx!==null){reportJointIssue(failIdx,lm,'plank');return;}
+  const sh=pt(lm,LM.L_SH,LM.R_SH),hip=pt(lm,LM.L_HIP,LM.R_HIP);
+  const ref=isKnee?pt(lm,LM.L_KN,LM.R_KN):pt(lm,LM.L_AN,LM.R_AN);
+  resetJointFails([LM.L_SH,LM.R_SH,LM.L_HIP,LM.R_HIP,...refIdxPair]);
+  const d=devNorm(sh,hip,ref);
+  S.confSamples.push((sh.visibility+hip.visibility+ref.visibility)/3);
+  if(d>CFG.plank.sagThresh){cue('sag','Hips dropping down. Drive them up — squeeze your core hard.','bad');if(!S.formBreakDetected){S.formBreakDetected=true;S.formBreakTime=S.timerSeconds;}}
+  else if(d<-CFG.plank.sagThresh){cue('pike','Hips too high. Lower them — your body needs to be a straight line.','bad');if(!S.formBreakDetected){S.formBreakDetected=true;S.formBreakTime=S.timerSeconds;}}
+  else goodFormTick();
+}
+
+/* ─── MEDIAPIPE ─── */
+function onPoseResults(results){
+  busy=false;
+  if(!processingActive||!results.poseLandmarks)return;
+  const lm=results.poseLandmarks;
+  lastLM=lm;
+  drawSkel(lm);
+  if(!S.lockedSide)S.lockedSide=pickSide(lm);
+  if(awaitingReady){updateReadyGate(lm);return;}
+  checkVis(lm);
+  if(!countingActive||(S&&S.paused))return;
+  switch(EXERCISES[app.exIdx].id){
+    case 'pushups':analyzePushup(lm);break;
+    case 'squats':analyzeSquat(lm);break;
+    case 'glutebridges':analyzeGlute(lm);break;
+    case 'plank':analyzePlank(lm);break;
+  }
+}
+
+/* ─── CAMERA ─── */
+async function initPose(){
+  if(poseModel)return;
+  poseModel=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
+  poseModel.setOptions({modelComplexity:0,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.55,minTrackingConfidence:0.55});
+  poseModel.onResults(onPoseResults);
+}
+async function startCamera(){
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:640},height:{ideal:480}},audio:false});
+  video.srcObject=stream;
+  await new Promise(res=>{video.onloadedmetadata=()=>{video.play();res();};});
+  overlay.width=video.videoWidth||640;overlay.height=video.videoHeight||480;
+  requestAnimationFrame(frameLoop);
+}
+function frameLoop(){
+  if(processingActive&&!busy&&poseModel&&video.readyState>=2){busy=true;poseModel.send({image:video}).catch(()=>{busy=false;});}
+  requestAnimationFrame(frameLoop);
+}
+document.getElementById('flipCamBtn').onclick=async()=>{facingMode=facingMode==='user'?'environment':'user';await startCamera();};
+
+/* ─── SUPERMAN TAP MECHANIC ─── */
+function initSupermanUI(){
+  const ex=EXERCISES[app.exIdx];
+  const targetReps=parseInt(ex.repTarget)||8;
+  supRepActive=false;clearInterval(supInterval);
+  document.getElementById('supCount').textContent=`0 / ${targetReps}`;
+  document.getElementById('supTimer').textContent=' ';
+  const btn=document.getElementById('supBtn');
+  btn.textContent='Start Rep';btn.className='sup-btn idle';
+  document.getElementById('supWrap').classList.add('visible');
+  btn.onclick=()=>{
+    if(!supRepActive){
+      // Start rep
+      supRepActive=true;supRepStart=Date.now();
+      btn.textContent='End Rep';btn.className='sup-btn active';
+      speak('Lift.');
+      supInterval=setInterval(()=>{
+        document.getElementById('supTimer').textContent=((Date.now()-supRepStart)/1000).toFixed(1)+'s';
+      },100);
+    } else {
+      // End rep
+      clearInterval(supInterval);supRepActive=false;
+      btn.textContent='Start Rep';btn.className='sup-btn idle';
+      const held=(Date.now()-supRepStart)/1000;
+      const clean=held>=CFG.superman.holdNeeded;
+      S.repsData.push({seconds:Math.round(held*10)/10,clean});
+      const count=S.repsData.length;
+      document.getElementById('supCount').textContent=`${count} / ${targetReps}`;
+      document.getElementById('supTimer').textContent=' ';
+      if(clean){speak(String(count));hudCue('Clean hold ✓','good');}
+      else{speak('Too short. Hold for 2 seconds.');hudCue('Hold longer — 2 seconds minimum','bad');}
+      if(count>=targetReps){
+        setTimeout(()=>{
+          countingActive=false;processingActive=false;
+          document.getElementById('supWrap').classList.remove('visible');
+          speak('Set complete.');finishSet();
+        },500);
+      }
+    }
+  };
+}
+
+/* ─── SESSION FLOW ─── */
+function startSession(){
+  unlockVoice();
+  const completed=loadSessions().filter(s=>s.complete);
+  session={
+    id:'s_'+Date.now(),date:new Date().toISOString().slice(0,10),
+    startTime:Date.now(),endTime:null,energy:app.energy,soreness:null,complete:false,
+    dayNumber:completed.length+1,
+    daysSinceLast:completed.length?daysSince(completed[completed.length-1].date):null,
+    exercises:{pushups:{version:null,sets:[]},squats:{sets:[]},glutebridges:{sets:[]},plank:{version:null,sets:[]},superman:{version:null,sets:[]}},
+    trackingLog:{}
+  };
+  app.exIdx=0;app.setIdx=0;
+  initPose().then(showExerciseIntro);
+}
+
+function showExerciseIntro(){
+  const ex=EXERCISES[app.exIdx];
+  document.getElementById('introEyebrow').textContent=`Exercise ${app.exIdx+1} of ${EXERCISES.length}`;
+  document.getElementById('introTitle').textContent=ex.label;
+  document.getElementById('introTarget').textContent=`${ex.sets} sets × ${ex.repTarget}${ex.type==='reps'?' reps':''} · ${ex.restSec}s rest`;
+  document.getElementById('introTip').textContent=ex.tip;
+  const noteEl=document.getElementById('introNote');
+  if(ex.note){noteEl.style.display='block';noteEl.textContent=ex.note;}else noteEl.style.display='none';
+  const vWrap=document.getElementById('introVersionWrap');
+  if(ex.hasVersion){
+    vWrap.classList.remove('hidden');
+    document.getElementById('introVersionLabel').textContent=ex.versionLabel;
+    const pw=document.getElementById('introVersionPills');pw.innerHTML='';
+    const saved=localStorage.getItem('fc_v_'+ex.id);
+    let chosen=saved||ex.versions[0].v;app.version[ex.id]=chosen;
+    ex.versions.forEach(opt=>{
+      const d=document.createElement('div');d.className='pill'+(opt.v===chosen?' active':'');d.textContent=opt.l;
+      d.onclick=()=>{app.version[ex.id]=opt.v;localStorage.setItem('fc_v_'+ex.id,opt.v);[...pw.children].forEach(c=>c.classList.remove('active'));d.classList.add('active');};
+      pw.appendChild(d);
+    });
+  } else vWrap.classList.add('hidden');
+  showScreen('screenIntro');
+}
+
+document.getElementById('beginExerciseBtn').onclick=async()=>{
+  const ex=EXERCISES[app.exIdx];
+  if(needsCalibration(ex)){
+    document.getElementById('calibIntro').textContent=`First time doing ${ex.label} — let's learn your natural range of motion so form checks are accurate for your body.`;
+    showScreen('screenCalibrate');
+    return;
+  }
+  app.setIdx=0;showScreen('screenActive');await startCamera();setupSet();
+};
+
+function setupSet(){
+  const ex=EXERCISES[app.exIdx];S=newS();
+  S.calibOverride=JSON.parse(localStorage.getItem('fc_calib_'+ex.id)||'null');
+  countingActive=false;processingActive=true;
+  supRepActive=false;clearInterval(supInterval);clearInterval(plankInterval);
+  document.getElementById('hudExName').textContent=ex.label;
+  document.getElementById('hudSetOf').textContent=`Set ${app.setIdx+1} of ${ex.sets}`;
+  document.getElementById('hudCue').textContent='';document.getElementById('hudCue').className='hud-cue';
+  document.getElementById('visWarn').style.display='none';
+  document.getElementById('supWrap').classList.remove('visible');
+  document.getElementById('bigNum').textContent='0';
+  document.getElementById('bigLabel').textContent=ex.type==='hold'?'Seconds':'Reps';
+  document.getElementById('endSetBtn').textContent=ex.type==='hold'?'Start Hold':'End Set';
+  document.getElementById('endSetBtn').dataset.hs='idle';
+  document.getElementById('readyTitle').textContent='Get into position';
+  document.getElementById('readyTip').textContent=ex.readyTip+' Wear fitted clothing — loose fabric can hide joints from tracking.';
+  document.getElementById('readyOverlay').style.display='flex';
+  document.getElementById('readyBtn').disabled=true;
+  gateFrameCount=0;awaitingReady=true;
+  speak(`${ex.label}. Set ${app.setIdx+1} of ${ex.sets}. Get into position.`);
+}
+
+document.getElementById('readyBtn').onclick=()=>{
+  if(document.getElementById('readyBtn').disabled)return;
+  const ex=EXERCISES[app.exIdx];
+  awaitingReady=false;
+  document.getElementById('readyOverlay').style.display='none';
+  countingActive=true;
+  if(ex.type==='superman'){initSupermanUI();speak('Tap Start Rep when you lift. Tap End Rep when you lower.');}
+  else if(ex.type==='hold'){speak('In position. Tap Start Hold when ready.');}
+  else speak('Go.');
+};
+
+document.getElementById('endSetBtn').onclick=()=>{
+  if(calibMode){cancelCalibration();return;}
+  const ex=EXERCISES[app.exIdx];
+  if(ex.type==='hold'){handleHoldBtn();return;}
+  if(ex.type==='superman'){countingActive=false;processingActive=false;document.getElementById('supWrap').classList.remove('visible');finishSet();return;}
+  countingActive=false;processingActive=false;finishSet();
+};
+function cancelCalibration(){
+  countingActive=false;processingActive=false;awaitingReady=false;
+  calibMode=false;calibReps=[];
+  document.getElementById('readyOverlay').style.display='none';
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  document.getElementById('endSetBtn').textContent='End Set';
+  showExerciseIntro();
+}
+
+function handleHoldBtn(){
+  const btn=document.getElementById('endSetBtn');
+  if(btn.dataset.hs==='idle'){
+    btn.dataset.hs='running';btn.textContent='Stop Hold';
+    S.timerSeconds=0;countingActive=true;
+    plankInterval=setInterval(()=>{S.timerSeconds++;document.getElementById('bigNum').textContent=S.timerSeconds;},1000);
+    speak('Hold started.');
+  } else {
+    clearInterval(plankInterval);btn.dataset.hs='idle';
+    countingActive=false;processingActive=false;
+    speak(`${S.timerSeconds} seconds.`);finishSet();
+  }
+}
+
+/* ─── RECORDS ─── */
+function makeRecord(){
+  const ex=EXERCISES[app.exIdx],sn=app.setIdx+1;
+  if(ex.id==='pushups'){
+    const full=S.repsData.filter(r=>r.quality==='full').length,partial=S.repsData.filter(r=>r.quality==='partial').length,shallow=S.repsData.filter(r=>r.quality==='shallow').length;
+    return{setNum:sn,reps:S.repsData.length,full,partial,shallow,raw:S.repsData,rpe:null,couldDoMore:null,version:app.version.pushups};
+  }
+  if(ex.id==='squats'){
+    const par=S.repsData.filter(r=>r.depth==='parallel').length,high=S.repsData.filter(r=>r.depth==='high').length;
+    return{setNum:sn,reps:S.repsData.length,parallel:par,high,raw:S.repsData,rpe:null,kneePain:false};
+  }
+  if(ex.id==='glutebridges'){
+    const full=S.repsData.filter(r=>r.height==='full').length,partial=S.repsData.filter(r=>r.height==='partial').length;
+    return{setNum:sn,reps:S.repsData.length,full,partial,raw:S.repsData,rpe:null};
+  }
+  if(ex.id==='plank'){
+    const avgVis=S.confSamples.length?S.confSamples.reduce((a,b)=>a+b,0)/S.confSamples.length:1;
+    return{setNum:sn,seconds:S.timerSeconds,formBreak:S.formBreakDetected,formBreakTime:S.formBreakTime,stoppedReason:S.formBreakDetected?'form':'fatigue',version:app.version.plank,confidence:confidenceLabel(avgVis)};
+  }
+  if(ex.id==='superman'){
+    const clean=S.repsData.filter(r=>r.clean).length;
+    const avgSec=S.repsData.length?S.repsData.reduce((s,r)=>s+r.seconds,0)/S.repsData.length:0;
+    return{setNum:sn,reps:S.repsData.length,clean,avgSec:Math.round(avgSec*10)/10,raw:S.repsData,version:app.version.superman};
+  }
+}
+function recapLine(rec){
+  const ex=EXERCISES[app.exIdx];
+  if(ex.id==='pushups'){const p=[];if(rec.full)p.push(`${rec.full} full`);if(rec.partial)p.push(`${rec.partial} partial`);if(rec.shallow)p.push(`${rec.shallow} shallow`);return`${rec.reps} reps${p.length?' ('+p.join(', ')+')':''}`;}
+  if(ex.id==='squats')return`${rec.reps} reps — ${rec.parallel} parallel, ${rec.high} high`;
+  if(ex.id==='glutebridges')return`${rec.reps} reps — ${rec.full} full, ${rec.partial} partial`;
+  if(ex.id==='plank')return`${rec.seconds}s — ${rec.formBreak?'form broke':'form held'}`;
+  if(ex.id==='superman')return`${rec.reps} reps — ${rec.clean} clean holds`;
+}
+function finishSet(){pendingRecord=makeRecord();showRestScreen();}
+
+/* ─── REST SCREEN ─── */
+function showRestScreen(){
+  const ex=EXERCISES[app.exIdx];
+  document.getElementById('restTitle').textContent=`${ex.label} — Set ${pendingRecord.setNum}`;
+  document.getElementById('restRecap').textContent=recapLine(pendingRecord);
+  const rW=document.getElementById('rpeWrap'),cW=document.getElementById('couldMoreWrap'),kW=document.getElementById('kneePainWrap');
+  rW.classList.add('hidden');cW.classList.add('hidden');kW.classList.add('hidden');
+
+  // RPE — push-ups, squats, glute bridges
+  if(ex.hasRPE){
+    rW.classList.remove('hidden');
+    const pw=document.getElementById('rpePills');pw.innerHTML='';
+    for(let i=1;i<=10;i++){
+      const d=document.createElement('div');d.className='pill';d.textContent=i;d.style.minWidth='9%';
+      d.onclick=()=>{pendingRecord.rpe=i;[...pw.children].forEach(c=>c.classList.remove('active'));d.classList.add('active');};
+      pw.appendChild(d);
+    }
+  }
+  // Could do more — push-ups only
+  if(ex.hasCouldMore){
+    cW.classList.remove('hidden');
+    const yBtn=document.getElementById('couldYes'),nBtn=document.getElementById('couldNo');
+    pendingRecord.couldDoMore=null;yBtn.classList.remove('active');nBtn.classList.remove('active');
+    yBtn.onclick=()=>{pendingRecord.couldDoMore='yes';yBtn.classList.add('active');nBtn.classList.remove('active');};
+    nBtn.onclick=()=>{pendingRecord.couldDoMore='no';nBtn.classList.add('active');yBtn.classList.remove('active');};
+  }
+  // Knee pain — squats only
+  if(ex.hasKneePain){
+    kW.classList.remove('hidden');
+    const no=document.getElementById('kneePainNo'),yes=document.getElementById('kneePainYes');
+    pendingRecord.kneePain=false;no.classList.add('active');yes.classList.remove('active');
+    no.onclick=()=>{pendingRecord.kneePain=false;no.classList.add('active');yes.classList.remove('active');};
+    yes.onclick=()=>{pendingRecord.kneePain=true;yes.classList.add('active');no.classList.remove('active');};
+  }
+
+  document.getElementById('restTarget').textContent=`Rest — recommended ${ex.restSec}s`;
+  let sec=0;document.getElementById('restTimer').textContent='0:00';
+  clearInterval(restInterval);
+  restInterval=setInterval(()=>{sec++;document.getElementById('restTimer').textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;},1000);
+  speak('Set complete. Rest.');
+  showScreen('screenRest');
+}
+
+document.getElementById('nextSetBtn').onclick=()=>{
+  clearInterval(restInterval);
+  const ex=EXERCISES[app.exIdx];
+  if(ex.id==='pushups')session.exercises.pushups.version=app.version.pushups||'full';
+  if(ex.id==='plank')session.exercises.plank.version=app.version.plank||'full';
+  if(ex.id==='superman')session.exercises.superman.version=app.version.superman||'arms';
+  session.exercises[ex.id].sets.push(pendingRecord);
+  if(app.setIdx+1<ex.sets){app.setIdx++;showScreen('screenActive');processingActive=true;setupSet();}
+  else if(app.exIdx+1<EXERCISES.length){app.exIdx++;showExerciseIntro();}
+  else finishSession();
+};
+
+/* ─── FINISH SESSION ─── */
+function finishSession(){
+  processingActive=false;countingActive=false;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  session.endTime=Date.now();session.complete=true;
+  const list=loadSessions();list.push(session);saveSessions(list);
+  renderSummary();
+}
+
+/* ─── COACHING LOGIC ─── */
+function buildCoachingCards(sess){
+  const cards=[];
+  const pu=sess.exercises.pushups, sq=sess.exercises.squats, gb=sess.exercises.glutebridges, pl=sess.exercises.plank, su=sess.exercises.superman;
+
+  // PUSH-UPS
+  if(pu.sets.length){
+    const wins=[],issues=[];
+    const totalReps=pu.sets.reduce((s,r)=>s+r.reps,0);
+    const totalFull=pu.sets.reduce((s,r)=>s+r.full,0);
+    const totalPartial=pu.sets.reduce((s,r)=>s+r.partial,0);
+    const totalShallow=pu.sets.reduce((s,r)=>s+r.shallow,0);
+    const target=8*pu.sets.length;
+    if(totalReps>=target)wins.push(`Hit the rep target (${totalReps}/${target} total reps)`);
+    else issues.push(`Missed rep target — got ${totalReps}/${target} reps`);
+    if(totalFull===totalReps)wins.push('Full range of motion on every single rep');
+    else if(totalFull/totalReps>=0.75)wins.push(`Mostly full ROM — ${totalFull}/${totalReps} full reps`);
+    else issues.push(`Only ${totalFull}/${totalReps} reps were full range — depth is the main issue`);
+    if(totalShallow>2)issues.push(`${totalShallow} shallow reps — your elbows aren't bending enough`);
+    if(pu.sets.length>=2){
+      const s1ratio=pu.sets[0].full/(pu.sets[0].reps||1);
+      const lastRatio=pu.sets[pu.sets.length-1].full/(pu.sets[pu.sets.length-1].reps||1);
+      if(lastRatio<s1ratio-0.3)issues.push(`Form degraded by set ${pu.sets.length} — fatigue is hitting your technique`);
+    }
+    const rpeSets=pu.sets.filter(s=>s.rpe!==null);
+    if(rpeSets.length){
+      const avg=rpeSets.reduce((s,r)=>s+r.rpe,0)/rpeSets.length;
+      if(avg<=5)wins.push(`Low RPE average (${avg.toFixed(1)}/10) — you have more capacity here`);
+      else if(avg>=8.5)issues.push(`Very high RPE (${avg.toFixed(1)}/10) — this is near your limit right now`);
+    }
+    const couldMore=pu.sets.some(s=>s.couldDoMore==='yes');
+    if(couldMore)wins.push("You felt you had more in the tank — good sign for progression");
+    const focus=issues.length===0?'Strong set. Try adding 1–2 reps per set next session.':totalShallow>2?'Focus: slow down your descent and make every rep touch depth.':totalPartial>totalFull?'Focus: fewer reps with full range beats more reps with partial range.':'Focus: keep form consistent across all 3 sets, not just set 1.';
+    cards.push({label:'Push-Ups',wins,issues,focus});
+  }
+
+  // SQUATS
+  if(sq.sets.length){
+    const wins=[],issues=[];
+    const totalReps=sq.sets.reduce((s,r)=>s+r.reps,0);
+    const totalPar=sq.sets.reduce((s,r)=>s+r.parallel,0);
+    const totalHigh=sq.sets.reduce((s,r)=>s+r.high,0);
+    const target=12*sq.sets.length;
+    if(totalReps>=target-3)wins.push(`Hit target range (${totalReps} reps)`);
+    else issues.push(`Below target — ${totalReps} reps, aiming for ${target}`);
+    if(totalPar===totalReps)wins.push('Full depth on every rep — thighs parallel or below');
+    else if(totalHigh>totalPar)issues.push(`${totalHigh} reps above parallel — you're squatting too high, sit back more`);
+    else issues.push(`${totalHigh} partial-depth reps — work on sitting deeper`);
+    if(sq.sets.some(s=>s.kneePain))issues.push('Knee discomfort reported — monitor this and stop if it gets worse');
+    else wins.push('No knee pain reported');
+    const rpeSets=sq.sets.filter(s=>s.rpe!==null);
+    if(rpeSets.length){const avg=rpeSets.reduce((s,r)=>s+r.rpe,0)/rpeSets.length;if(avg<=4)wins.push(`Easy effort (RPE ${avg.toFixed(1)}/10) — your squat capacity is building`);}
+    const focus=totalHigh>0?'Focus: drive your hips back, chest up, sit into the squat until thighs hit parallel.':'Solid squats. Add 1–2 reps next session if it felt easy.';
+    cards.push({label:'Squats',wins,issues,focus});
+  }
+
+  // GLUTE BRIDGES
+  if(gb.sets.length){
+    const wins=[],issues=[];
+    const totalReps=gb.sets.reduce((s,r)=>s+r.reps,0);
+    const totalFull=gb.sets.reduce((s,r)=>s+r.full,0);
+    const totalPartial=gb.sets.reduce((s,r)=>s+r.partial,0);
+    const target=10*gb.sets.length;
+    if(totalReps>=target)wins.push(`Hit the rep target (${totalReps}/${target} reps)`);
+    else issues.push(`Missed target — ${totalReps}/${target} reps`);
+    if(totalFull===totalReps)wins.push('Full hip extension on every rep — glutes are fully engaging');
+    else if(totalPartial>0)issues.push(`${totalPartial} partial reps — squeeze your glutes hard and push your hips all the way up`);
+    const focus=totalPartial>0?'Focus: at the top of every rep, pause for 1 second and squeeze your glutes before lowering.':'Good form. Hold the top position for 1–2 seconds to increase difficulty.';
+    cards.push({label:'Glute Bridges',wins,issues,focus});
+  }
+
+  // PLANK
+  if(pl.sets.length){
+    const wins=[],issues=[];
+    const totalSec=pl.sets.reduce((s,r)=>s+r.seconds,0);
+    const target=30;
+    const aboveTarget=pl.sets.filter(s=>s.seconds>=target).length;
+    if(aboveTarget===pl.sets.length)wins.push(`Hit 30s target on all ${pl.sets.length} sets`);
+    else if(aboveTarget>0)wins.push(`Hit 30s on ${aboveTarget}/${pl.sets.length} sets`);
+    else issues.push(`Below 30s target — working up to it`);
+    const formBroke=pl.sets.filter(s=>s.formBreak).length;
+    if(formBroke===0)wins.push('Form held throughout — hip alignment was clean');
+    else issues.push(`Form broke in ${formBroke}/${pl.sets.length} sets — hips were drifting`);
+    const shortest=Math.min(...pl.sets.map(s=>s.seconds));
+    const focus=formBroke>0?'Focus: reduce hold time and prioritise perfect alignment over duration.':totalSec/pl.sets.length<20?'Focus: build up 2–3 seconds per set each week.':'Solid plank. Push toward 35s next session.';
+    cards.push({label:'Plank',wins,issues,focus});
+  }
+
+  // SUPERMAN
+  if(su.sets.length){
+    const wins=[],issues=[];
+    const totalReps=su.sets.reduce((s,r)=>s+r.reps,0);
+    const totalClean=su.sets.reduce((s,r)=>s+r.clean,0);
+    const target=8*su.sets.length;
+    if(totalReps>=target)wins.push(`Completed all ${totalReps} reps`);
+    else issues.push(`${totalReps}/${target} reps completed`);
+    if(totalClean===totalReps)wins.push('Every hold was 2 seconds or longer — clean form');
+    else if(totalClean/totalReps>=0.7)wins.push(`Most holds were clean (${totalClean}/${totalReps})`);
+    else issues.push(`${totalReps-totalClean} holds under 2 seconds — not fully engaging the hold`);
+    const focus=totalClean<totalReps?'Focus: slow down. Lift, hold for a full 2 seconds at the top, then lower slowly.':'Good. Add arms + legs if you were doing arms only, or increase to 10 reps.';
+    cards.push({label:'Superman Holds',wins,issues,focus});
+  }
+
+  return cards;
+}
+
+function renderCoachingCards(cards){
+  const wrap=document.getElementById('coachingCards');wrap.innerHTML='';
+  cards.forEach(card=>{
+    const div=document.createElement('div');div.className='coach-card';
+    let html=`<div class="ex-label">${card.label}</div>`;
+    card.wins.forEach(w=>{html+=`<div class="coach-line win"><span class="icon">✅</span><span>${w}</span></div>`;});
+    card.issues.forEach(i=>{html+=`<div class="coach-line issue"><span class="icon">❌</span><span>${i}</span></div>`;});
+    html+=`<div class="coach-line focus" style="margin-top:6px;"><span class="icon">🎯</span><span>${card.focus}</span></div>`;
+    div.innerHTML=html;wrap.appendChild(div);
+  });
+}
+
+/* ─── NOTION FORMAT ─── */
+function buildNotionBlock(sess){
+  const pu=sess.exercises.pushups,sq=sess.exercises.squats,gb=sess.exercises.glutebridges,pl=sess.exercises.plank,su=sess.exercises.superman;
+  const dur=Math.round((sess.endTime-sess.startTime)/60000);
+
+  // Infer push-up form quality
+  const puAllFull=pu.sets.every(s=>s.partial===0&&s.shallow===0);
+  const puSet3Worse=pu.sets.length>=3&&(pu.sets[2].partial+pu.sets[2].shallow)>(pu.sets[0].partial+pu.sets[0].shallow);
+  const puForm=puAllFull?'Clean':puSet3Worse?'Broke down by set 3':'Partial reps present';
+  const puCouldMore=pu.sets.some(s=>s.couldDoMore==='yes')?'Yes':'No';
+  const sqDepth=sq.sets.every(s=>s.high===0)?'Full':'Partial';
+  const sqKnee=sq.sets.some(s=>s.kneePain)?'Yes':'No';
+  const gbExt=gb.sets.every(s=>s.partial===0)?'Full':'Partial';
+  const plFormHeld=pl.sets.every(s=>!s.formBreak)?'Yes':'No';
+  const suClean=su.sets.reduce((s,r)=>s+r.clean,0)/Math.max(su.sets.reduce((s,r)=>s+r.reps,0),1);
+  const suForm=suClean>=0.8?'Clean':'Struggled';
+
+  let o='';
+  o+=`DATE: ${sess.date}\n`;
+  o+=`DAY NUMBER: ${sess.dayNumber}\n`;
+  o+=`SESSION: Bodyweight Circuit\n\n`;
+  o+=`PUSH-UPS\n`;
+  o+=`Version: ${pu.version==='full'?'Full':'Knee'}\n`;
+  pu.sets.forEach(s=>{o+=`Set ${s.setNum}: ${s.reps} reps — RPE ${s.rpe!==null?s.rpe+'\/10':'—'}\n`;});
+  o+=`Form: ${puForm}\n`;
+  o+=`Could have done more: ${puCouldMore}\n\n`;
+  o+=`SQUATS\n`;
+  sq.sets.forEach(s=>{o+=`Set ${s.setNum}: ${s.reps} reps — RPE ${s.rpe!==null?s.rpe+'\/10':'—'}\n`;});
+  o+=`Depth: ${sqDepth}\n`;
+  o+=`Knee discomfort: ${sqKnee}\n\n`;
+  o+=`GLUTE BRIDGES\n`;
+  gb.sets.forEach(s=>{o+=`Set ${s.setNum}: ${s.reps} reps — RPE ${s.rpe!==null?s.rpe+'\/10':'—'}\n`;});
+  o+=`Hip extension at top: ${gbExt}\n\n`;
+  o+=`PLANK\n`;
+  o+=`Version: ${pl.version==='full'?'Full':'Knees down'}\n`;
+  pl.sets.forEach(s=>{o+=`Set ${s.setNum}: ${s.seconds} sec\n`;});
+  o+=`Form held throughout: ${plFormHeld}\n\n`;
+  o+=`SUPERMAN HOLDS\n`;
+  o+=`Version: ${su.version==='arms_legs'?'Arms and legs':'Arms only'}\n`;
+  su.sets.forEach(s=>{o+=`Set ${s.setNum}: ${s.reps} reps — ${s.avgSec}s avg hold\n`;});
+  o+=`Form: ${suForm}\n\n`;
+  o+=`OVERALL\n`;
+  o+=`Total session time: ${dur} min\n`;
+  o+=`Energy going in: ${sess.energy}\/10\n`;
+  o+=`Soreness next morning: —`;
+  return o;
+}
+
+/* ─── TRACKING QUALITY REPORT ─── */
+function confLabelsToScore(l){return l==='High'?1:l==='Medium'?0.5:0;}
+function buildTrackingReport(sess){
+  const cards=[];
+  EXERCISES.forEach(ex=>{
+    const exData=sess.exercises[ex.id];
+    if(!exData||!exData.sets||!exData.sets.length)return;
+    const strong=[],issues=[];
+    const log=sess.trackingLog[ex.id]||{};
+    const jointEntries=Object.values(log);
+    if(jointEntries.length){
+      jointEntries.sort((a,b)=>b.count-a.count).forEach(j=>{
+        issues.push(`${j.name} — ${j.count} tracking issue${j.count===1?'':'s'} this session`);
+      });
+    }
+    let confScores=[];
+    exData.sets.forEach(s=>{
+      if(s.confidence)confScores.push(confLabelsToScore(s.confidence));
+      if(s.raw)s.raw.forEach(r=>{if(r.confidence)confScores.push(confLabelsToScore(r.confidence));});
+    });
+    const avgConf=confScores.length?confScores.reduce((a,b)=>a+b,0)/confScores.length:1;
+    if(jointEntries.length===0)strong.push('All tracked joints held strong confidence all session');
+    else if(avgConf>=0.75)strong.push('Overall tracking confidence stayed high despite a few flagged frames');
+    let rec;
+    if(jointEntries.length===0)rec='Setup was solid — keep the same camera position and lighting next time.';
+    else{
+      const worst=jointEntries.sort((a,b)=>b.count-a.count)[0];
+      rec=`Next session: reposition so your ${worst.name} stays clearly in frame, or improve lighting/clothing fit — that was the most repeated tracking issue.`;
+    }
+    cards.push({label:ex.label,strong,issues,rec});
+  });
+  return cards;
+}
+function renderTrackingCards(cards){
+  const wrap=document.getElementById('trackingCards');wrap.innerHTML='';
+  cards.forEach(card=>{
+    const div=document.createElement('div');div.className='track-card';
+    let html=`<div class="ex-label">${card.label}</div>`;
+    card.strong.forEach(w=>{html+=`<div class="track-line strong"><span>✅</span><span>${w}</span></div>`;});
+    card.issues.forEach(i=>{html+=`<div class="track-line issue"><span>⚠️</span><span>${i}</span></div>`;});
+    html+=`<div class="track-rec">🎯 ${card.rec}</div>`;
+    div.innerHTML=html;wrap.appendChild(div);
+  });
+}
+
+/* ─── RENDER SUMMARY ─── */
+function renderSummary(){
+  const dur=Math.round((session.endTime-session.startTime)/60000);
+  document.getElementById('summaryHeadline').textContent=`Day ${session.dayNumber} · ${dur} min · Energy ${session.energy}/10`;
+  const cards=buildCoachingCards(session);
+  renderCoachingCards(cards);
+  renderTrackingCards(buildTrackingReport(session));
+  document.getElementById('notionBox').textContent=buildNotionBlock(session);
+  document.getElementById('summaryScroll').scrollTop=0;
+  showScreen('screenSummary');
+}
+
+document.getElementById('copyBtn').onclick=async()=>{
+  const t=buildNotionBlock(session);
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+  const b=document.getElementById('copyBtn');const orig=b.textContent;b.textContent='Copied ✓';
+  setTimeout(()=>{b.textContent=orig;},1500);
+};
+document.getElementById('doneBtn').onclick=()=>{
+  app={exIdx:0,setIdx:0,energy:null,version:{}};
+  [...document.getElementById('energyPills').children].forEach(p=>p.classList.remove('active'));
+  document.getElementById('startSessionBtn').style.opacity='0.45';
+  refreshStartStats();showScreen('screenStart');
+};
+
+/* ─── MUTE ─── */
+document.getElementById('muteBtn').onclick=()=>{
+  voiceMuted=!voiceMuted;localStorage.setItem('fc_muted',voiceMuted?'1':'0');
+  document.getElementById('muteBtn').textContent=voiceMuted?'🔇':'🔊';
+};
+
+/* ─── START SCREEN ─── */
+function buildEnergyPills(){
+  const w=document.getElementById('energyPills');w.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const d=document.createElement('div');d.className='pill';d.textContent=i;d.style.minWidth='9%';
+    d.onclick=()=>{app.energy=i;[...w.children].forEach(c=>c.classList.remove('active'));d.classList.add('active');document.getElementById('startSessionBtn').style.opacity='1';};
+    w.appendChild(d);
+  }
+}
+function refreshStartStats(){
+  const list=loadSessions().filter(s=>s.complete);
+  document.getElementById('statCount').textContent=list.length;
+  document.getElementById('statDays').textContent=list.length?daysSince(list[list.length-1].date)+' days':'—';
+}
+function checkSorenessPrompt(){
+  const list=loadSessions(),today=new Date().toISOString().slice(0,10);
+  const target=[...list].reverse().find(s=>s.complete&&s.soreness===null&&s.date!==today);
+  if(!target)return;
+  document.getElementById('sorenessSub').textContent=`From your ${target.date} circuit`;
+  const pw=document.getElementById('sorenessPills');pw.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const d=document.createElement('div');d.className='pill';d.textContent=i;d.style.minWidth='9%';
+    d.onclick=()=>{
+      target.soreness=i;const all=loadSessions();const idx=all.findIndex(s=>s.id===target.id);
+      if(idx>-1){all[idx]=target;saveSessions(all);}
+      document.getElementById('sorenessModal').classList.remove('visible');
+    };
+    pw.appendChild(d);
+  }
+  document.getElementById('sorenessSkip').onclick=()=>{
+    target.soreness='skipped';const all=loadSessions();const idx=all.findIndex(s=>s.id===target.id);
+    if(idx>-1){all[idx]=target;saveSessions(all);}
+    document.getElementById('sorenessModal').classList.remove('visible');
+  };
+  document.getElementById('sorenessModal').classList.add('visible');
+}
+document.getElementById('startSessionBtn').onclick=()=>{if(!app.energy)return;startSession();};
+
+/* ─── BOOT ─── */
+window.addEventListener('DOMContentLoaded',()=>{
+  video=document.getElementById('video');overlay=document.getElementById('overlay');octx=overlay.getContext('2d');
+  litCanvas=document.createElement('canvas');litCanvas.width=16;litCanvas.height=12;litCtx=litCanvas.getContext('2d',{willReadFrequently:true});
+  buildEnergyPills();refreshStartStats();
+  document.getElementById('muteBtn').textContent=voiceMuted?'🔇':'🔊';
+  checkSorenessPrompt();
+});
+})();
+</script>
+</body>
+</html>
